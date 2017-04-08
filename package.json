@@ -1,0 +1,18 @@
+{
+  "name": "beanstalk",
+  "version": "1.0.0",
+  "description": "Command line tools for Beanstalk git access",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Nathaniel Taintor <than@10up.com>",
+  "license": "GPLv3",
+  "dependencies": {
+    "commander": "^2.9.0",
+    "request": "^2.81.0",
+    "request-promise": "^4.2.0",
+    "shelljs": "^0.7.7",
+    "underscore": "^1.8.3"
+  }
+}
