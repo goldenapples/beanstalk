@@ -33,7 +33,7 @@ const GitUtils = {
         let { origin, organization, repository } = GitUtils.parseCurrentRepositoryOrigin();
 
         try {
-            let repos = await BeanstalkAPI.get( '10up', 'repositories', [] );
+            let repos = await BeanstalkAPI.get( GitUtils.organization, 'repositories', [] );
             let repo =  _.find( repos, (r) => { return ( r.repository.name === repository ); } );
             repoID = repo.repository.id;
 
