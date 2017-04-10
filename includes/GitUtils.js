@@ -24,10 +24,9 @@ const GitUtils = {
      * @returns {Promise<string>}
      */
     getCurrentRepositoryID: async () => {
-        let repoID = shell.exec( 'git config --get beanstalk.repository' );
+        let repoID = shell.exec( 'git config --get beanstalk.repository' ).stdout.trim();
 
         if ( repoID.length ) {
-            shell.echo( `Retrieved ID from config; "${repoID}"` );
             return repoID;
         }
 
@@ -41,6 +40,29 @@ const GitUtils = {
             shell.exec( `git config beanstalk.repository ${repoID}` );
             return repoID;
         } catch (error) {
+            console.log( error ); 
+            shell.exit();
+        }
+    },
+
+
+    getCurrentRepositoryName: async () => {
+        let nameFromConfig = shell.exec( 'git config --get beanstalk.repo_name' ).stdout.trim();
+
+        if ( nameFromConfig ) {
+            return nameFromConfig;
+        }
+
+        try {
+            let organization = await GitUtils.organization;
+            let repositoryID = await GitUtils.getCurrentRepositoryID();
+            let req = await BeanstalkAPI.get( organization, `repositories/${repositoryID}`, {} );
+
+            let repo_name = req.repository.name;
+
+            shell.exec( `git config beanstalk.repo_name ${repo_name}` );
+            return repo_name;
+        } catch ( error ) {
             console.log( error ); 
             shell.exit();
         }
@@ -72,14 +94,13 @@ const GitUtils = {
      * Getter for the repo "organization" as used on Beanstalk.
      */
     get organization() {
-        let orgFromConfig = shell.exec( 'git config --get beanstalk.organization' );
+        let orgFromConfig = shell.exec( 'git config --get beanstalk.organization' ).stdout.trim();
 
         if ( orgFromConfig ) {
             return orgFromConfig;
         }
 
-        let { isValid, organization, repository } = this.parseCurrentRepositoryOrigin();
-        console.log( organization );
+        let { isValid, organization, repository } = GitUtils.parseCurrentRepositoryOrigin();
         return organization;
     },
 
@@ -87,9 +108,20 @@ const GitUtils = {
      * Getter for the current git branch.
      */
     get branch() {
-        return shell.exec( 'git rev-parse --abbrev HEAD' );
+        return shell.exec( 'git rev-parse --abbrev-ref HEAD' ).stdout.trim();
     },
 
+    /**
+     * Getter for the repository's name.
+     *
+     * Note that this may return a Promise, if it is necessary to call the API
+     * to look up the name. Any code that retrieves this value may need to
+     * await it.
+     */
+    get name() {
+        return shell.exec( 'git config --get beanstalk.repo_name' ).stdout.trim();
+
+    }
 }
 
 module.exports = GitUtils;

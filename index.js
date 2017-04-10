@@ -22,10 +22,24 @@ program
     .action( commands.repo );
 
 program
-	.command( 'code-review <branch>' )
+	.command( 'code-review' )
     .alias( 'cr' )
-    .description( 'Get all open code-reviews in the current repository.' )
+    .option( '-t, --target <target_branch>', 'Target branch to review' )
+    .option( '-b, --base <base_branch>', 'Base branch, to compare against' )
+    .option( '-m, --message <text>', 'One-line description for the code review. Any additional text will be entered as a comment on the code review request' )
+    .option( '--merge', 'Merge this CR into the base branch when approved?' ) 
+    .description( 'Open a new code review request.' )
     .action( commands.codeReview );
+
+program
+	.command( 'code-reviews' )
+    .alias( 'crs' )
+    .option( '-b, --branch <branch>', 'Find open code request matching branch <branch>.' )
+    .option( '-s, --status <status>', 'Only show reviews in status <status> ("all" shows all available).' )
+    .option( '--per_page <number>', 'Number of reviews to display.' )
+    .option( '--page <number>', 'If per_page is set, the page of results to display.' )
+    .description( 'Get all open code-reviews in the current repository.' )
+    .action( commands.codeReviews );
 
 program.parse( process.argv );
 
