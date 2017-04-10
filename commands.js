@@ -1,4 +1,3 @@
-const program    = require( 'commander' );
 const shell      = require( 'shelljs' );
 const Table      = require( 'table-layout' );
 const _          = require( 'lodash' );
