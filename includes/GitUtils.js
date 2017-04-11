@@ -40,7 +40,7 @@ const GitUtils = {
             shell.exec( `git config beanstalk.repository ${repoID}` );
             return repoID;
         } catch (error) {
-            console.log( error ); 
+            console.log( error.message ); 
             shell.exit();
         }
     },
@@ -63,7 +63,7 @@ const GitUtils = {
             shell.exec( `git config beanstalk.repo_name ${repo_name}` );
             return repo_name;
         } catch ( error ) {
-            console.log( error ); 
+            console.log( error.message ); 
             shell.exit();
         }
     },
