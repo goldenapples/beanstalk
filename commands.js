@@ -38,7 +38,10 @@ ${repo.vcs} address: ${repo.repository_url}
  * @command `bs code-review`
  *
  */
-const codeReview = async ( env, options ) => {
+const codeReview = async ( options ) => {
+    let organization = await GitUtils.organization;
+    let repositoryID = await GitUtils.getCurrentRepositoryID();
+    let repo_name = await GitUtils.getCurrentRepositoryName();
     let target_branch = options.target || GitUtils.branch;
     let source_branch = options.base || 'master';
     let merge = options.merge || false;
@@ -50,12 +53,12 @@ const codeReview = async ( env, options ) => {
     let [ description, comment ] = message.split( /[\r\n][\r\n\s]*/, 1 );
 
     console.log( ' target: %j', target_branch );
-    console.log( ' base: %j', base_branch );
+    console.log( ' source: %j', source_branch );
     console.log( ' description: %j', description );
     console.log( ' comment: %j', comment );
     console.log( ' merge; %j', merge );
 
-    let req = await BeanstalkAPI.post( `${repositoryID}/code_reviews`, { target_branch, source_branch, description, merge } );
+    let req = await BeanstalkAPI.post( organization, `${repositoryID}/code_reviews`, { code_review: { target_branch, source_branch, description, merge } } );
 
     shell.echo( `https://${organization}.beanstalkapp.com/${repo_name}/code_reviews/${req.id}` );
 

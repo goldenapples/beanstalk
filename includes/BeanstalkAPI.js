@@ -32,9 +32,14 @@ const _buildAPIRequest = function( organization, endpoint ) {
  * @param Object Query parameters
  */
 const get = async function( organization, endpoint, params ) {
-    var _requestParams = _buildAPIRequest( organization, endpoint );
-    _requestParams[ 'qs' ] = params;
-    return await request.get( _requestParams );
+    try {
+        var _requestParams = _buildAPIRequest( organization, endpoint );
+        _requestParams[ 'qs' ] = params;
+        return await request.get( _requestParams );
+    } catch ( error ) {
+        shell.echo( `Beanstalk API error ${error.message}` );
+        shell.exit();
+    }
 };
 
 /**
@@ -45,9 +50,15 @@ const get = async function( organization, endpoint, params ) {
  * @param Object Object Post body data, will be JSON encoded
  */
 const post = async function( organization, endpoint, data ) {
-    var _requestParams = _buildAPIRequest( organization, endpoint );
-    _requestParams[ 'body' ] = JSON.stringify( data );
-    return await request.post( _requestParams );
+    try {
+        var _requestParams = _buildAPIRequest( organization, endpoint );
+        _requestParams.json  = true;
+        _requestParams.body = data;
+        return await request.post( _requestParams );
+    } catch ( error ) {
+        shell.echo( `Beanstalk API error ${error.message}` );
+        shell.exit();
+    }
 };
 
 module.exports = { get, post };
