@@ -42,7 +42,7 @@ const codeReview = async ( options ) => {
         shell.echo( 'A description is required to open a new code review request.' ); 
         shell.exit();
     }
-    let [ description, comment ] = message.split( /[\r\n][\r\n\s]*/, 1 );
+    let [ description, body ] = message.split( /[\r\n][\r\n\s]*/, 1 );
 
     let codeReviewRequest = {
         organization,
@@ -50,15 +50,20 @@ const codeReview = async ( options ) => {
         repo_name,
         target_branch,
         source_branch,
-        merge,
-        message
+        description,
+        merge
     };
 
-    let newReviewID = await BeanstalkUtils.createReview( codeReviewRequest );
+    let reviewID = await BeanstalkUtils.createReview( codeReviewRequest );
 
-    shell.echo( `https://${organization}.beanstalkapp.com/${repo_name}/code_reviews/${newReviewID}` );
+    shell.echo( `Code review request opened: https://${organization}.beanstalkapp.com/${repo_name}/code_reviews/${reviewID}` );
 
-    // TODO: If the "message" included a commentC, post it now as a comment.
+    // If the "body" included a comment, post it now as a comment.
+    if ( body.length ) {
+        await BeanstalkUtils.postComment(
+            { organization, repositoryID, repo_name, reviewID, body }
+        );
+    }
 
     shell.exit();
 };

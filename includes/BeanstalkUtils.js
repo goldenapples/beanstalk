@@ -64,5 +64,22 @@ const createReview = async ( codeReviewRequest ) => {
     }
 }
 
-module.exports = { bootstrapRepo, getRepoDetails, getReviews, createReview };
+const postComment = async ( postCommentRequest ) => {
+    try {
+        let {
+            organization,  repositoryID,   repo_name,
+            reviewID,      body
+        } = postCommentRequest
+
+        let postedComment = await BeanstalkAPI.post( organization, `${repositoryID}/code_reviews/${review_ID}/comments`,
+            { comment: { body } }
+        );
+
+        return postedComment.id;
+    } catch ( error ) {
+        exitOnError( error );
+    }
+}
+
+module.exports = { bootstrapRepo, getRepoDetails, getReviews, createReview, postComment };
 
