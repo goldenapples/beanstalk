@@ -17,7 +17,7 @@ const _buildAPIRequest = function( organization, endpoint ) {
         uri: `https://${organization}.beanstalkapp.com/api/${endpoint}.json`,
         headers: {
             'Content-Type': 'application/json',
-            'User-Agent': 'Beanstalk CLI client <than@10up.com>'
+            'User-Agent': 'Beanstalk CLI client <https://github.com/goldenapples/beanstalk>'
         },
         auth: { user, pass },
         json: true
