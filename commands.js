@@ -4,6 +4,7 @@ const _          = require( 'lodash' );
 var GitUtils     = require( './includes/GitUtils' );
 var ShellUtils   = require( './includes/ShellUtils' );
 var BeanstalkAPI = require( './includes/BeanstalkAPI' );
+var BeanstalkUtils = require( './includes/BeanstalkUtils' );
 
 
 /**
@@ -12,13 +13,10 @@ var BeanstalkAPI = require( './includes/BeanstalkAPI' );
  */
 const repo = async ( options ) => {
 
-    try {
-        let organization = await GitUtils.organization;
-        let repositoryID = await GitUtils.getCurrentRepositoryID();
-        let req = await BeanstalkAPI.get( organization, `repositories/${repositoryID}`, {} );
-        let repo = req.repository;
+    let { organization, repositoryID, repo_name } = await BeanstalkUtils.bootstrapRepo();
+    let repo = await BeanstalkUtils.getRepoDetails( organization, repositoryID );
 
-        shell.echo( `
+    shell.echo( `
 Repository Details:
 
 Title: ${repo.title} [Beanstalk ID: ${repo.id}]
@@ -26,12 +24,7 @@ Title: ${repo.title} [Beanstalk ID: ${repo.id}]
 HTTPS URL: https://${organization}.beanstalkapp.com/${repo.name}/
 ${repo.vcs} address: ${repo.repository_url}
 ` 
-        ); 
-
-    } catch (err) {
-        shell.echo( 'Error getting the repository ID for this project. If you have it, try setting it with `git config beanstalk.repository`.' );
-        shell.exit();
-    }
+    ); 
 };
 
 /**
@@ -39,9 +32,8 @@ ${repo.vcs} address: ${repo.repository_url}
  *
  */
 const codeReview = async ( options ) => {
-    let organization = await GitUtils.organization;
-    let repositoryID = await GitUtils.getCurrentRepositoryID();
-    let repo_name = await GitUtils.getCurrentRepositoryName();
+
+    let { organization, repositoryID, repo_name } = await BeanstalkUtils.bootstrapRepo();
     let target_branch = options.target || GitUtils.branch;
     let source_branch = options.base || 'master';
     let merge = options.merge || false;
@@ -52,15 +44,19 @@ const codeReview = async ( options ) => {
     }
     let [ description, comment ] = message.split( /[\r\n][\r\n\s]*/, 1 );
 
-    console.log( ' target: %j', target_branch );
-    console.log( ' source: %j', source_branch );
-    console.log( ' description: %j', description );
-    console.log( ' comment: %j', comment );
-    console.log( ' merge; %j', merge );
+    let codeReviewRequest = {
+        organization,
+        repositoryID,
+        repo_name,
+        target_branch,
+        source_branch,
+        merge,
+        message
+    };
 
-    let req = await BeanstalkAPI.post( organization, `${repositoryID}/code_reviews`, { code_review: { target_branch, source_branch, description, merge } } );
+    let newReviewID = await BeanstalkUtils.createReview( codeReviewRequest );
 
-    shell.echo( `https://${organization}.beanstalkapp.com/${repo_name}/code_reviews/${req.id}` );
+    shell.echo( `https://${organization}.beanstalkapp.com/${repo_name}/code_reviews/${newReviewID}` );
 
     // TODO: If the "message" included a commentC, post it now as a comment.
 
@@ -68,18 +64,32 @@ const codeReview = async ( options ) => {
 };
 
 /**
+ * @command `bs cancel <codeReviewID>`
+ */
+const cancel = async ( ID ) => {
+    let { organization, repositoryID, repo_name } = await BeanstalkUtils.bootstrapRepo();
+
+
+}
+
+
+/**
  * @command `bs code-reviews`
  */
 const codeReviews = async ( options ) => {
-    let organization = GitUtils.organization;
-    let repositoryID = await GitUtils.getCurrentRepositoryID();
-    let repo_name = await GitUtils.getCurrentRepositoryName();
+
+    let { organization, repositoryID, repo_name } = await BeanstalkUtils.bootstrapRepo();
+
     let state = options.status || 'pending';
     let per_page = options.per_page || 100;
     let page = ( options.per_page && options.page ) ? options.page : 1;
 
-    let req = await BeanstalkAPI.get( organization, `${repositoryID}/code_reviews`, { state } );
-    let reviews = req.code_reviews;
+    let getReviewsRequest = {
+        organization, repositoryID, repo_name,
+        state, per_page, page
+    };
+
+    let reviews = await BeanstalkUtils.getReviews( getReviewsRequest ); 
 
     if ( options.branch ) {
         // Parse refs like "HEAD" or "-" where possible
